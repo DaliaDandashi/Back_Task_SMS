@@ -14,9 +14,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('auth:api')->get('/admin', function (Request $request) {
+    return $request->admin();
 });
+
+Route::post('/register', [\App\Http\Controllers\AuthController::class, 'register']);
+Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login']);
+Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout']);
 
 Route::post('/admin', [\App\Http\Controllers\AdminController::class, 'createAdmin']);
 Route::get('/admin', [\App\Http\Controllers\AdminController::class, 'getAdmins']);
@@ -38,6 +42,3 @@ Route::put('/homework/{id}', [\App\Http\Controllers\HomeworkController::class, '
 Route::delete('/homework/{id}', [\App\Http\Controllers\HomeworkController::class, 'deleteHomework']);
 Route::get('/teacherhomework/{id}', [\App\Http\Controllers\HomeworkController::class, 'getHomeworkTeacher']);
 
-Route::post('/register', [\App\Http\Controllers\AuthController::class, 'register']);
-Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login']);
-Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout']);

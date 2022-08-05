@@ -8,10 +8,10 @@ use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\Model;
 
-class admin extends Authenticatable implements JWTSubject
-{
-    use HasFactory, Notifiable;
-    protected $fillable = [
+class admin  extends Authenticatable implements JWTSubject
+{    
+     use HasFactory, Notifiable;
+       protected $fillable = [
         'fname',
         'lname',
         'username',

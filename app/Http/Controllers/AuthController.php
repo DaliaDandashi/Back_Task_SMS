@@ -50,25 +50,25 @@ class AuthController extends Controller
     {
         $request->validate([
             'username' => 'required|string|max:255',
-            'password' => 'required|string|min:2',
+            'password' => 'required|string|',
         ]);
 
-        $credentials = $request->only(['username', 'password']);
+        $credentials = $request->only('username', 'password');
 
-        $token = Auth::attempt($credentials);
-        if (!$token) {
+        // $token = Auth::attempt($credentials);
+        if (Auth::attempt($credentials)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized',
             ], 401);
         }
 
-        $admin = Auth::admin();
+        $admin = Auth::guard('admins')->user();
         return response()->json([
                 'status' => 'success',
                 'admin' => $admin,
                 'authorisation' => [
-                    'token' => $token,
+                    // 'token' => $token,
                     'type' => 'bearer',
                 ]
             ]);
