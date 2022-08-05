@@ -3,75 +3,97 @@
 namespace App\Http\Controllers;
 
 use App\Models\Admin;
-use Auth;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Exception;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['login','register']]);
+    }
+
+
     public function register(Request $request)
     {
-    try{
+        $request->validate([
+            'fname' => 'required|string|max:255',
+            'lname' => 'required|string|max:255',
+            'username' => 'required|string|max:255',
+            'password' => 'required|string|min:2',
+        ]);
+   
         $admin = Admin::create([
             'fname' => $request->fname,
             'lname' => $request->lname,
             'username' => $request->username,
-            'password' => $request->password,
+            'password' => Hash::make($request->password),
         ]);
 
-        $token = auth()->login($admin);
+        $token = Auth()->login($admin);
 
-        return $this->respondWithToken($token);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Admin created successfully',
+            'admin' => $admin,
+            'authorisation' => [
+                'token' => $token,
+                'type' => 'bearer',
+            ]
+        ]);
+
     }
-     catch (Exception $e) {
-        return [
-            'success' => false,
-            'error' => $e,
-        ];
 
-        }
-    }
-
-    public function login()
+    public function login(Request $request)
     {
-        $credentials = request(['username', 'password']);
+        $request->validate([
+            'username' => 'required|string|max:255',
+            'password' => 'required|string|min:2',
+        ]);
 
-        if (!$token = auth()->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        $credentials = $request->only(['username', 'password']);
+
+        $token = Auth::attempt($credentials);
+        if (!$token) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized',
+            ], 401);
         }
 
-        try {
-            $data = Admin::where('username', $credentials['username'])->first();
-            $data->update(['remember_token' => $token]);
-        } catch (Exception $e) {
-            return false;
-        }
-
-        // return Admin::where('username', $credentials['username'])->first();
-        return $this->respondWithToken($token);
+        $admin = Auth::admin();
+        return response()->json([
+                'status' => 'success',
+                'admin' => $admin,
+                'authorisation' => [
+                    'token' => $token,
+                    'type' => 'bearer',
+                ]
+            ]);
     }
 
     public function logout()
     {
-        $credentials = request(['username']);
-
-        try {
-            $data = Admin::where('username', $credentials['username'])->first();
-            $data->update(['remember_token' => null]);
-        } catch (Exception $e) {
-            return false;
-        }
-
-        auth()->logout();
-        return response()->json(['message' => 'Successfully logged out']);
-    }
-
-    protected function respondWithToken($token)
-    {
+        Auth::logout();
         return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60,
+            'status' => 'success',
+            'message' => 'Successfully logged out',
         ]);
     }
+
+    public function refresh()
+    {
+        return response()->json([
+            'status' => 'success',
+            'admin' => Auth::admin(),
+            'authorisation' => [
+                'token' => Auth::refresh(),
+                'type' => 'bearer',
+            ]
+        ]);
+    }
+
+ 
 }
